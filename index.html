@@ -7,8 +7,9 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:#1A2E42;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden;font-family:'DM Sans',sans-serif;touch-action:none;}
-#gw{position:relative;width:480px;height:810px;overflow:hidden;border-radius:12px;box-shadow:0 24px 64px rgba(0,0,0,.5);}
+body{background:#1A2E42;height:100vh;overflow:hidden;font-family:'DM Sans',sans-serif;touch-action:none;margin:0;}
+#scale-wrap{position:absolute;top:0;left:0;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;}
+#gw{position:relative;width:480px;height:810px;overflow:hidden;border-radius:12px;box-shadow:0 24px 64px rgba(0,0,0,.5);flex-shrink:0;transform-origin:center center;}
 canvas{position:absolute;left:0;image-rendering:pixelated;}
 #hud{position:absolute;top:0;left:0;right:0;height:90px;background:#14284A;border-bottom:1px solid rgba(91,141,184,.3);display:flex;align-items:center;padding:30px 14px 0;gap:10px;z-index:10;pointer-events:none;}
 .wn{font-size:14px;font-weight:600;color:white;letter-spacing:.05em;flex-shrink:0;}
@@ -44,6 +45,7 @@ canvas{position:absolute;left:0;image-rendering:pixelated;}
 </style>
 </head>
 <body>
+<div id="scale-wrap">
 <div id="gw">
   <canvas id="gc" width="480" height="720" style="top:60px;"></canvas>
   <div id="hud">
@@ -78,7 +80,26 @@ canvas{position:absolute;left:0;image-rendering:pixelated;}
     <p style="margin-top:16px;">The first patients are already waiting.</p>
   </div>
 </div>
+</div>
 <script>
+// ═══════════════════════════════════════
+// RESPONSIVE SCALING
+// The game is authored at a fixed 480x810 canvas. Rather than rewriting
+// every hardcoded pixel coordinate throughout the codebase, we scale the
+// whole #gw box visually via CSS transform to fit the actual viewport —
+// internal game logic always thinks it's working in the original 480x810
+// space, so all existing room/button math stays valid.
+let GAME_SCALE=1;
+function fitGameWindow(){
+  const GW=480, GH=810;
+  const vw=window.innerWidth, vh=window.innerHeight;
+  GAME_SCALE=Math.min(vw/GW, vh/GH);
+  document.getElementById('gw').style.transform=`scale(${GAME_SCALE})`;
+}
+window.addEventListener('resize', fitGameWindow);
+window.addEventListener('orientationchange', fitGameWindow);
+fitGameWindow();
+
 // ═══════════════════════════════════════
 // ENGINE
 // Map rows counted from bottom:
@@ -501,11 +522,11 @@ const JOY={active:false,ox:0,oy:0,dx:0,dy:0,R:36};
 const jz=document.getElementById('jz'),jt=document.getElementById('jt');
 function applyJoy(rx,ry){const d=Math.hypot(rx,ry)||1;const dx=d>JOY.R?rx/d*JOY.R:rx,dy=d>JOY.R?ry/d*JOY.R:ry;JOY.dx=dx/JOY.R;JOY.dy=dy/JOY.R;jt.style.left=(36+dx)+'px';jt.style.top=(36+dy)+'px';}
 function resetJoy(){JOY.active=false;JOY.dx=0;JOY.dy=0;jt.style.left='36px';jt.style.top='36px';}
-jz.addEventListener('touchstart',e=>{e.preventDefault();JOY.active=true;const r=jz.getBoundingClientRect(),t=e.touches[0];JOY.ox=t.clientX-r.left-60;JOY.oy=t.clientY-r.top-60;},{passive:false});
-jz.addEventListener('touchmove',e=>{e.preventDefault();if(!JOY.active)return;const r=jz.getBoundingClientRect(),t=e.touches[0];applyJoy(t.clientX-r.left-60-JOY.ox,t.clientY-r.top-60-JOY.oy);},{passive:false});
+jz.addEventListener('touchstart',e=>{e.preventDefault();JOY.active=true;const r=jz.getBoundingClientRect(),t=e.touches[0];JOY.ox=(t.clientX-r.left)/GAME_SCALE-60;JOY.oy=(t.clientY-r.top)/GAME_SCALE-60;},{passive:false});
+jz.addEventListener('touchmove',e=>{e.preventDefault();if(!JOY.active)return;const r=jz.getBoundingClientRect(),t=e.touches[0];applyJoy((t.clientX-r.left)/GAME_SCALE-60-JOY.ox,(t.clientY-r.top)/GAME_SCALE-60-JOY.oy);},{passive:false});
 jz.addEventListener('touchend',resetJoy);
-jz.addEventListener('mousedown',e=>{JOY.active=true;const r=jz.getBoundingClientRect();JOY.ox=e.clientX-r.left-60;JOY.oy=e.clientY-r.top-60;});
-window.addEventListener('mousemove',e=>{if(!JOY.active)return;const r=jz.getBoundingClientRect();applyJoy(e.clientX-r.left-60-JOY.ox,e.clientY-r.top-60-JOY.oy);});
+jz.addEventListener('mousedown',e=>{JOY.active=true;const r=jz.getBoundingClientRect();JOY.ox=(e.clientX-r.left)/GAME_SCALE-60;JOY.oy=(e.clientY-r.top)/GAME_SCALE-60;});
+window.addEventListener('mousemove',e=>{if(!JOY.active)return;const r=jz.getBoundingClientRect();applyJoy((e.clientX-r.left)/GAME_SCALE-60-JOY.ox,(e.clientY-r.top)/GAME_SCALE-60-JOY.oy);});
 window.addEventListener('mouseup',resetJoy);
 const KEYS={};
 window.addEventListener('keydown',e=>{KEYS[e.key]=true;});window.addEventListener('keyup',e=>{KEYS[e.key]=false;});
