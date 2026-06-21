@@ -7,8 +7,9 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:#1A2E42;height:100vh;overflow:hidden;font-family:'DM Sans',sans-serif;touch-action:none;margin:0;}
-#scale-wrap{position:absolute;top:0;left:0;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;}
+html{height:100%;margin:0;}
+body{background:#1A2E42;height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;touch-action:none;margin:0;}
+#scale-wrap{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
 #gw{position:relative;width:480px;height:810px;overflow:hidden;border-radius:12px;box-shadow:0 24px 64px rgba(0,0,0,.5);flex-shrink:0;transform-origin:center center;}
 canvas{position:absolute;left:0;image-rendering:pixelated;}
 #hud{position:absolute;top:0;left:0;right:0;height:90px;background:#14284A;border-bottom:1px solid rgba(91,141,184,.3);display:flex;align-items:center;padding:30px 14px 0;gap:10px;z-index:10;pointer-events:none;}
