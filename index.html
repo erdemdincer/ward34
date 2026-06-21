@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Dr. Olcay</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#1A2E42;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden;font-family:'DM Sans',sans-serif;touch-action:none;}
+#gw{position:relative;width:480px;height:810px;overflow:hidden;border-radius:12px;box-shadow:0 24px 64px rgba(0,0,0,.5);}
+canvas{position:absolute;left:0;image-rendering:pixelated;}
+#hud{position:absolute;top:0;left:0;right:0;height:90px;background:#14284A;border-bottom:1px solid rgba(91,141,184,.3);display:flex;align-items:center;padding:30px 14px 0;gap:10px;z-index:10;pointer-events:none;}
+.wn{font-size:14px;font-weight:600;color:white;letter-spacing:.05em;flex-shrink:0;}
+.wn span{opacity:.4;font-weight:300;margin-right:4px;}
+#ebar-wrap{flex:1;display:flex;flex-direction:column;gap:2px;}
+#ebar-lbl{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);text-align:center;}
+#ebar-bg{height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;}
+#ebar-fill{height:100%;border-radius:4px;transition:width .3s,background .3s;}
+.hres{display:flex;gap:6px;flex-shrink:0;position:relative;top:5px;}
+.hp{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:3px 7px;display:flex;align-items:center;gap:3px;font-size:11px;color:white;}
+.hp .v{font-weight:600;}.hp .l{opacity:.5;font-size:10px;}
+.room-btn{position:absolute;background:#14284A;color:white;border:1.5px solid #5B8DB8;border-radius:8px;padding:6px 12px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;z-index:20;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.35);transition:background .15s;display:none;transform:translate(-50%,-100%);}
+.room-btn.on{display:block;}.room-btn:hover{background:#3a5f8a;}.room-btn.warn{border-color:#C4735A;background:#5A2E1A;}
+#jz{position:absolute;bottom:24px;right:24px;width:120px;height:120px;z-index:20;}
+#jb{width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.15);position:absolute;}
+#jt{width:48px;height:48px;border-radius:50%;background:rgba(20,40,74,.95);border:2px solid rgba(255,255,255,.5);position:absolute;top:36px;left:36px;box-shadow:0 2px 8px rgba(0,0,0,.4);}
+#intro{position:absolute;inset:0;background:linear-gradient(rgba(10,18,30,.45),rgba(10,18,30,.55)),url('assets/screens/intro_bg.png') center/cover no-repeat;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;text-align:center;padding:40px 32px;transition:opacity .6s;}
+#intro.hidden{opacity:0;pointer-events:none;}
+#intro .ey{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:16px;}
+#intro h1{font-family:'DM Serif Display',serif;font-size:56px;color:white;line-height:1;margin-bottom:20px;}
+#intro p{font-size:14px;color:rgba(255,255,255,.6);line-height:1.7;margin-bottom:8px;max-width:320px;}
+#intro .sb,#outro .sb{margin-top:28px;background:#14284A;color:white;border:none;border-radius:8px;padding:13px 36px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
+#popup{position:absolute;inset:0;background:rgba(26,46,66,.72);display:flex;align-items:center;justify-content:center;z-index:50;opacity:0;pointer-events:none;transition:opacity .25s;}
+#popup.show{opacity:1;pointer-events:all;}
+.pb{background:#F0F4F8;border-radius:14px;padding:28px 24px;width:300px;text-align:center;}
+.pb .pi{font-size:36px;margin-bottom:10px;}
+.pb h3{font-family:'DM Serif Display',serif;font-size:20px;color:#1A2E42;margin-bottom:8px;}
+.pb p{font-size:12px;color:#5A7A96;line-height:1.6;margin-bottom:14px;}
+.pb .pr{background:#E8EDF2;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;color:#2C4A6E;margin-bottom:14px;}
+.pb .pbt{background:#14284A;color:white;border:none;border-radius:8px;padding:10px 24px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;width:100%;}
+#toast{position:absolute;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(26,46,66,.96);color:white;border:1px solid rgba(91,141,184,.4);border-radius:8px;padding:8px 16px;font-size:12px;font-weight:500;z-index:30;opacity:0;transition:opacity .3s;pointer-events:none;max-width:280px;text-align:center;}
+#toast.show{opacity:1;}#toast.warn{border-color:#C4735A;}
+</style>
+</head>
+<body>
+<div id="gw">
+  <canvas id="gc" width="480" height="720" style="top:60px;"></canvas>
+  <div id="hud">
+    <div class="wn"><img src="assets/branding/logo.png" alt="Dr. Olcay" style="height:48px;display:block;"></div>
+    <div id="ebar-wrap"><div id="ebar-lbl">Energy</div><div id="ebar-bg"><div id="ebar-fill"></div></div></div>
+    <div class="hres">
+      <div class="hp"><span>🛏️</span><span class="v" id="hpat">0</span><span class="l">/9</span></div>
+      <div class="hp"><span>🔬</span><span class="v" id="hresc">0</span><span class="l">/2</span></div>
+      <div class="hp"><span>🎓</span><span class="v" id="hlec">0</span><span class="l">/1</span></div>
+    </div>
+  </div>
+  <div id="popup">
+    <div class="pb"><div class="pi" id="pi">🌿</div><h3 id="ptitle"></h3><p id="ptext"></p>
+      <div class="pr" id="preward" style="display:none"></div>
+      <button class="pbt" onclick="closePopup()">Continue</button></div>
+  </div>
+  <div id="toast"></div>
+  <div id="jz"><div id="jb"></div><div id="jt"></div></div>
+  <div id="outro" style="display:none;position:absolute;inset:0;background:linear-gradient(rgba(10,18,30,.45),rgba(10,18,30,.55)),url('assets/screens/intro_bg.png') center/cover no-repeat;z-index:100;flex-direction:column;align-items:flex-end;justify-content:flex-end;text-align:right;padding:40px 32px;">
+    <div style="width:200px;display:flex;flex-direction:column;align-items:center;">
+      <img src="assets/branding/logo.png" alt="Dr. Olcay" style="width:200px;margin-bottom:16px;">
+      <h1 style="font-family:'DM Serif Display',serif;font-size:36px;color:white;line-height:1.1;margin-bottom:16px;text-align:center;">End of Shift</h1>
+      <p style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.6;margin-bottom:20px;text-align:center;">Dr. Olcay turns off the light in her office. It was a good day!</p>
+      <button class="sb" onclick="location.reload()">Play Again</button>
+    </div>
+  </div>
+  <div id="intro" style="align-items:flex-end;justify-content:flex-end;text-align:right;padding-bottom:64px;">
+    <div style="width:240px;display:flex;flex-direction:column;align-items:center;">
+      <img src="assets/branding/logo.png" alt="Dr. Olcay" style="width:240px;margin-bottom:20px;">
+      <button class="sb" onclick="startGame()">Begin Shift</button>
+    </div>
+    <p style="margin-top:16px;">The first patients are already waiting.</p>
+  </div>
+</div>
+<script>
+// ═══════════════════════════════════════
+// ENGINE
+// Map rows counted from bottom:
+//  0-2  : walking area
+//  3    : reception desk row
+//  4    : extra floor
+//  5    : corridor
+//  6-9  : Room1(L) + Research(R)
+//  10   : corridor
+//  11-14: Room2(L) + Break(R)
+//  15   : corridor
+//  16-19: Room3(L) + Lecture(R)
+//  20+  : top buffer
+// ═══════════════════════════════════════
+const T=40, VW=480, VH=720;
+const MAP_W=12, MAP_H=18;  // 12*40=480, 18*40=720
+const cv=document.getElementById('gc');
+const cx=cv.getContext('2d');
+cx.imageSmoothingEnabled=false;
+
+// ── ROW GEOMETRY (measured directly from the background artwork) ──
+// The illustrated background has NO corridor gap between room rows — three
+// room-pairs stack directly on top of each other, then a notice-board band,
+// then the reception/waiting area. Boundaries below were measured as pixel
+// fractions of the source image (1024x1536) and scaled to world space
+// (BG_W x BG_H). If you regenerate the background at different proportions,
+// remeasure and update just FRAC_Y/FRAC_X — everything else reads from them.
+const BG_W = 480, BG_H = 720;   // 480x720 = 2:3 aspect matches background image
+// Direct pixel geometry — T=32, rooms are 7x7 tiles (224x224 px)
+const ROW_Y = {top:0, r1:160, r2:320, r3:480, notice:480, bottom:720};
+const COL_X = {roomL0:0, roomL1:217, corL:217, corR:263, roomR0:263, roomR1:480};
+// Kept for any leftover callers expecting the old band-index API — now maps
+// a row index (0,1,2 top-to-bottom) directly to its measured pixel top/bottom,
+// instead of assuming uniform tile spacing.
+const ROOM_ROWS = [
+  {top:ROW_Y.top,  bottom:ROW_Y.r1},
+  {top:ROW_Y.r1,   bottom:ROW_Y.r2},
+  {top:ROW_Y.r2,   bottom:ROW_Y.r3},
+];
+
+
+// PALETTE
+const FL1='#D8CCBA',FL2='#CFC2AE',COR1='#C0B09A',COR2='#B4A48E',
+      WS='#6A8FA8',WT='#8AAFCA',BG='#1E2D3D',LK='#1A2530',LKL='#131D27',
+      DESKC='#A0785A',DESKL='#C8A87A',PLANTC='#6B9E6B',CHAIRC='#8AB4CC';
+
+// SPRITE
+const _=null,SK='#F5DECE',HR='#111',CT='#FFF',NV='#2C4A6E',
+      EG='#2E7D32',SH='#1C1008',LP='#D4827A',LH='#1A1A1A',SC='#E8E8E0';
+const SW=14;
+function pad(a){const r=[...a];while(r.length<SW)r.push(_);return r.slice(0,SW);}
+function mkD(w){return[
+  pad([_,_,_,LH,LH,LH,LH,LH,LH,LH,LH]),pad([_,_,LH,HR,HR,HR,HR,HR,HR,HR,HR,LH]),
+  pad([_,_,LH,HR,HR,HR,HR,HR,HR,HR,HR,LH]),pad([_,LH,HR,HR,SK,SK,SK,SK,SK,SK,HR,HR,LH]),
+  pad([_,LH,HR,SK,SK,SK,SK,SK,SK,SK,SK,HR,LH]),pad([_,LH,HR,SK,EG,EG,SK,SK,EG,EG,SK,HR,LH]),
+  pad([_,LH,HR,SK,SK,SK,SK,SK,SK,SK,SK,HR,LH]),pad([_,LH,HR,SK,SK,LP,LP,LP,LP,SK,SK,HR,LH]),
+  pad([_,LH,HR,SK,SK,SK,LP,LP,SK,SK,SK,HR,LH]),pad([_,LH,LH,HR,SK,SK,SK,SK,SK,SK,HR,LH,LH]),
+  pad([LH,LH,CT,CT,CT,CT,CT,CT,CT,CT,CT,CT,LH,LH]),pad([LH,LH,CT,NV,NV,CT,CT,CT,CT,NV,NV,CT,LH,LH]),
+  pad([LH,LH,CT,CT,SC,CT,CT,CT,CT,SC,CT,CT,LH,LH]),pad([LH,LH,CT,CT,CT,CT,CT,CT,CT,CT,CT,CT,LH,LH]),
+  pad([LH,LH,CT,NV,CT,CT,CT,CT,CT,CT,NV,CT,LH,LH]),pad([LH,LH,CT,CT,CT,CT,CT,CT,CT,CT,CT,CT,LH,LH]),
+  pad([_,LH,LH,CT,CT,CT,CT,CT,CT,CT,CT,LH,LH]),pad([_,_,LH,NV,NV,NV,_,_,NV,NV,NV,LH]),
+  w?pad([_,_,LH,NV,NV,_,_,NV,NV,NV,NV,LH]):pad([_,_,LH,NV,NV,NV,_,_,NV,NV,NV,LH]),
+  w?pad([_,_,LH,SH,SH,_,_,LH,SH,SH,SH,LH]):pad([_,_,LH,SH,SH,SH,_,LH,SH,SH,SH,LH]),
+  pad([_,_,_,LH,LH,LH,_,_,LH,LH,LH]),pad([]),
+];}
+function mkU(w){return[
+  pad([_,_,_,LH,LH,LH,LH,LH,LH,LH,LH]),pad([_,_,LH,HR,HR,HR,HR,HR,HR,HR,HR,LH]),
+  pad([_,_,LH,HR,HR,HR,HR,HR,HR,HR,HR,LH]),pad([_,LH,HR,HR,HR,HR,HR,HR,HR,HR,HR,HR,LH]),
+  pad([_,LH,HR,HR,HR,HR,HR,HR,HR,HR,HR,HR,LH]),pad([_,LH,HR,HR,HR,HR,HR,HR,HR,HR,HR,HR,LH]),
+  pad([_,LH,HR,HR,HR,HR,HR,HR,HR,HR,HR,HR,LH]),pad([_,LH,HR,HR,HR,HR,HR,HR,HR,HR,HR,HR,LH]),
+  pad([_,LH,HR,HR,HR,HR,HR,HR,HR,HR,HR,HR,LH]),pad([_,LH,LH,HR,HR,HR,HR,HR,HR,HR,HR,LH,LH]),
+  pad([LH,LH,CT,CT,CT,CT,CT,CT,CT,CT,CT,CT,LH,LH]),pad([LH,LH,CT,NV,NV,CT,CT,CT,CT,NV,NV,CT,LH,LH]),
+  pad([LH,LH,CT,CT,SC,CT,CT,CT,CT,SC,CT,CT,LH,LH]),pad([LH,LH,CT,CT,CT,CT,CT,CT,CT,CT,CT,CT,LH,LH]),
+  pad([LH,LH,CT,NV,CT,CT,CT,CT,CT,CT,NV,CT,LH,LH]),pad([LH,LH,CT,CT,CT,CT,CT,CT,CT,CT,CT,CT,LH,LH]),
+  pad([_,LH,LH,CT,CT,CT,CT,CT,CT,CT,CT,LH,LH]),pad([_,_,LH,NV,NV,NV,_,_,NV,NV,NV,LH]),
+  w?pad([_,_,LH,NV,NV,_,_,NV,NV,NV,NV,LH]):pad([_,_,LH,NV,NV,NV,_,_,NV,NV,NV,LH]),
+  w?pad([_,_,LH,SH,SH,_,_,LH,SH,SH,SH,LH]):pad([_,_,LH,SH,SH,SH,_,LH,SH,SH,SH,LH]),
+  pad([_,_,_,LH,LH,LH,_,_,LH,LH,LH]),pad([]),
+];}
+function mkL(w){return[
+  pad([_,_,_,LH,LH,LH,LH,LH,LH,LH]),pad([_,_,LH,HR,HR,HR,HR,HR,HR,HR,LH]),
+  pad([_,_,LH,HR,HR,HR,HR,HR,HR,HR,LH]),pad([_,LH,HR,HR,SK,SK,SK,SK,SK,HR,HR,LH]),
+  pad([_,LH,HR,SK,SK,SK,SK,SK,SK,SK,HR,LH]),pad([_,LH,HR,SK,EG,EG,SK,SK,SK,SK,HR,LH]),
+  pad([_,LH,HR,SK,SK,SK,SK,SK,SK,SK,HR,LH]),pad([_,LH,HR,SK,LP,LP,LP,SK,SK,SK,HR,LH]),
+  pad([_,LH,HR,SK,SK,LP,SK,SK,SK,SK,HR,LH]),pad([_,LH,LH,HR,SK,SK,SK,SK,HR,LH,LH]),
+  pad([LH,LH,CT,CT,CT,CT,CT,CT,CT,CT,LH,LH]),pad([LH,LH,CT,NV,CT,CT,CT,CT,CT,CT,LH,LH]),
+  pad([LH,LH,CT,CT,CT,CT,CT,CT,CT,CT,LH,LH]),pad([LH,LH,CT,NV,CT,CT,CT,CT,CT,CT,LH,LH]),
+  pad([LH,LH,CT,CT,CT,CT,CT,CT,CT,CT,LH,LH]),pad([LH,LH,CT,CT,CT,CT,CT,CT,CT,CT,LH,LH]),
+  pad([_,LH,LH,CT,CT,CT,CT,CT,CT,LH,LH]),
+  w?pad([_,_,LH,NV,NV,NV,NV,_,NV,NV,LH]):pad([_,_,LH,NV,NV,NV,_,_,NV,NV,LH]),
+  w?pad([_,_,LH,NV,NV,NV,NV,_,NV,NV,LH]):pad([_,_,LH,NV,NV,NV,_,_,NV,NV,LH]),
+  w?pad([_,_,LH,SH,SH,SH,SH,_,SH,SH,LH]):pad([_,_,LH,SH,SH,SH,_,_,SH,SH,LH]),
+  pad([_,_,_,LH,LH,LH,_,_,LH,LH]),pad([]),
+];}
+function mkR(w){return mkL(w).map(r=>[...r].reverse());}
+const SPR={down:[mkD(false),mkD(true)],up:[mkU(false),mkU(true)],left:[mkL(false),mkL(true)],right:[mkR(false),mkR(true)]};
+
+// ── ILLUSTRATED SPRITE SYSTEM (Dr. Olcay) ──
+// Single base illustration for now (image 5 / "Olcay base"), used for all
+// directions until direction-specific sprites are supplied. Swap individual
+// entries in PLAYER_SPRITES.dir below once directional art is ready —
+// everything else (movement, facing, draw call) stays the same.
+// Sprites are loaded from files in assets/characters/ instead of inline
+// base64 data — keeps this HTML file small and avoids JPEG recompression
+// artifacts. Each direction has a "stand" and a "walk" frame; PLAYER_SPRITES
+// below points at the stand frame for now (walk-frame animation can swap
+// PLAYER_SPRITES[dir] at runtime later without touching this loader).
+function loadSprite(path){
+  const img = new Image();
+  img.loaded = false;
+  img.onload = () => { img.loaded = true; };
+  img.src = path;
+  return img;
+}
+
+const olcayDownStand = loadSprite('assets/characters/olcay_down_stand.png');
+// Reception waiting-area overlays — swapped based on how many patients are
+// currently queued (0-3). Drawn over the bottom strip of the main background.
+const RECEPTION_OVERLAYS = [
+  loadSprite('assets/reception/reception_0.png'),
+  loadSprite('assets/reception/reception_1.png'),
+  loadSprite('assets/reception/reception_2.png'),
+  loadSprite('assets/reception/reception_3.png'),
+];
+const olcayDownWalk  = loadSprite('assets/characters/olcay_down_walk.png');
+const olcayUpStand   = loadSprite('assets/characters/olcay_up_stand.png');
+const olcayUpWalk    = loadSprite('assets/characters/olcay_up_walk.png');
+const olcayLeftStand = loadSprite('assets/characters/olcay_left_stand.png');
+const olcayLeftWalk  = loadSprite('assets/characters/olcay_left_walk.png');
+
+
+// Room patient overlays — shown when a bed is occupied
+const ROOM_OVERLAYS = {
+  0: loadSprite('assets/rooms/room_bot.png'),  // Room 1, row:2 (bottom)
+  2: loadSprite('assets/rooms/room_mid.png'),  // Room 2, row:1 (middle)
+  4: loadSprite('assets/rooms/room_top.png'),  // Room 3, row:0 (top)
+};
+const DOCTOR_OVERLAYS = {
+  0: loadSprite('assets/rooms/doctor_bot.png'),
+  2: loadSprite('assets/rooms/doctor_mid.png'),
+  4: loadSprite('assets/rooms/doctor_top.png'),
+};
+
+
+// Locked room overlays — solid dark image per room
+const LOCKED_OVERLAYS = {
+  0: loadSprite('assets/rooms/locked_0.png'),
+  1: loadSprite('assets/rooms/locked_1.png'),
+  2: loadSprite('assets/rooms/locked_2.png'),
+  3: loadSprite('assets/rooms/locked_3.png'),
+  4: loadSprite('assets/rooms/locked_4.png'),
+  5: loadSprite('assets/rooms/locked_5.png'),
+};
+
+// One entry per facing direction (stand pose). 'right' reuses the left-facing
+// image, mirrored horizontally at draw time in drawPlayer() — no separate asset.
+const PLAYER_SPRITES = { down: olcayDownStand, up: olcayUpStand, left: olcayLeftStand, right: olcayLeftStand };
+// Walk-frame counterparts, same direction keys, for future walk-cycle animation.
+const PLAYER_SPRITES_WALK = { down: olcayDownWalk, up: olcayUpWalk, left: olcayLeftWalk, right: olcayLeftWalk };
+
+// Render size for the illustrated sprite (in CSS px, before camera offset).
+// Tuned so Dr. Olcay reads at a sensible scale against the 48px tile grid.
+const SPRITE_H = T * 2.7;                        // doubled from previous pass — ~130px tall on-screen
+// Each directional image has a slightly different width:height ratio from
+// its own crop, so width is computed per-direction rather than assuming
+// a single fixed ratio for all of them. Fallback numbers match the actual
+// processed image sizes (target height 600px) in case .width reads 0 before load.
+function aspectOf(img,fallbackW){ return (img.width||fallbackW)/600; }
+const SPRITE_ASPECT = {
+  down:  aspectOf(olcayDownStand,400),
+  up:    aspectOf(olcayUpStand,413),
+  left:  aspectOf(olcayLeftStand,417),
+  right: aspectOf(olcayLeftStand,417)
+};
+const SPRITE_ASPECT_WALK = {
+  down:  aspectOf(olcayDownWalk,411),
+  up:    aspectOf(olcayUpWalk,416),
+  left:  aspectOf(olcayLeftWalk,417),
+  right: aspectOf(olcayLeftWalk,417)
+};
+
+// ── ILLUSTRATED BACKGROUND (full ward layout) ──
+// Single static background image covering the whole world (MAP_W*T x MAP_H*T).
+// It does NOT scroll independently — it is drawn once at world origin, and the
+// existing camera (CAM.x/CAM.y) crops into it exactly like the old procedural
+// floor tiles did. Locked rooms get a dark overlay + hint text drawn on top,
+// same placement logic as before. Furniture is baked into the image, so the
+// old per-room procedural furniture drawing is skipped while the background
+// system is active.
+const bgImg = new Image();
+let bgImgLoaded = false;
+bgImg.onload = () => { bgImgLoaded = true; };
+bgImg.src = 'assets/backgrounds/main.png';
+
+// Room-specific action backgrounds (shown while an action is in progress)
+const ACTION_BG_IMG = {};
+const ACTION_BG_LOADED = {};
+function registerActionBg(key, path){
+  const im = new Image();
+  ACTION_BG_LOADED[key] = false;
+  im.onload = () => { ACTION_BG_LOADED[key] = true; };
+  im.src = path;
+  ACTION_BG_IMG[key] = im;
+}
+registerActionBg('research', 'assets/backgrounds/action_research.png');
+registerActionBg('break', 'assets/backgrounds/action_break.png');
+registerActionBg('lecture', 'assets/backgrounds/action_lecture.png');
+
+// BG_W/BG_H (the world-space box the image is stretched to fill) are defined
+// earlier alongside ROW_Y/COL_X, since both derive from the same measurements.
+
+const PW=3,SPW=SW*PW,SPH=22*PW;
+function drawSprite(g,ox,oy){if(!g)return;for(let ry=0;ry<g.length;ry++){const row=g[ry];if(!row)continue;for(let rx=0;rx<row.length;rx++){const c=row[rx];if(!c)continue;cx.fillStyle=c;cx.fillRect(ox+rx*PW,oy+ry*PW,PW,PW);}}}
+
+// LAYOUT — row: 0=top pair, 1=middle pair, 2=bottom pair in the background
+// art. Room 1 should appear closest to the reception desk (bottom of
+// screen), so it's assigned row:2; Room 3 sits furthest away at row:0.
+const LAYOUT=[
+  {id:0,name:'Room 1',      row:2, side:'L',type:'bed',bi:0},
+  {id:1,name:'Research Lab',row:2, side:'R',type:'research'},
+  {id:2,name:'Room 2',      row:1, side:'L',type:'bed',bi:1},
+  {id:3,name:'Break Room',  row:1, side:'R',type:'break'},
+  {id:4,name:'Room 3',      row:0, side:'L',type:'bed',bi:2},
+  {id:5,name:'Lecture Hall',row:0, side:'R',type:'lecture'},
+];
+// Room zone in world px, read directly from the measured row/col geometry
+// instead of the old uniform fb/rowY grid.
+function rmZone(rm){
+  const r=ROOM_ROWS[rm.row];
+  const x0=rm.side==='L'?COL_X.roomL0:COL_X.roomR0;
+  const x1=rm.side==='L'?COL_X.roomL1:COL_X.roomR1;
+  return {x0, x1, cy:r.top, cb:r.bottom, w:x1-x0, h:r.bottom-r.top};
+}
+// Reception desk sits in the notice-band/waiting area below the room rows;
+// kept as a world-Y constant (old code referenced a tile-based DESK_FB).
+const DESK_Y = 480 + (720-480)*0.28;  // ~547 — reception desk Y
+
+// 10 PATIENTS
+const PDEFS=[
+  {label:'Patient 1',condition:'Severe Depression',          steps:[{name:'Medication'},{name:'Engagement'}],     discharge:'Patient 1 said a single word: "Thank you."',         reward:20,rr:5},
+  {label:'Patient 2',condition:'Paranoid Schizophrenia',     steps:[{name:'Antipsychotics'},{name:'Reorientation'}],discharge:'Patient 2 asked: "Were you always real?"',             reward:25,rr:7},
+  {label:'Patient 3',condition:'Treatment-Resistant Dep.',   steps:[{name:'Evaluation'},{name:'Deep Therapy'}],   discharge:'Patient 3 sat in the car park for twenty minutes.',    reward:30,rr:8},
+  {label:'Patient 4',condition:'Bipolar I',                  steps:[{name:'De-escalation'},{name:'Stabilizer'}],  discharge:"Patient 4's road is long. Today was good.",            reward:30,rr:9},
+  {label:'Patient 5',condition:'PTSD',                       steps:[{name:'Assessment'},{name:'EMDR Therapy'}],   discharge:'Patient 5 left holding a small potted plant.',         reward:32,rr:8},
+  {label:'Patient 6',condition:'OCD',                        steps:[{name:'CBT Session'},{name:'ERP Protocol'}],  discharge:'Patient 6 smiled for the first time in months.',       reward:33,rr:9},
+  {label:'Patient 7',condition:'Anorexia Nervosa',           steps:[{name:'Nutrition Plan'},{name:'Body Image Therapy'}],discharge:'Patient 7 ate a full meal on discharge day.',   reward:35,rr:10},
+  {label:'Patient 8',condition:'Acute Psychosis',            steps:[{name:'Crisis Stabilization'},{name:'Medication Titration'}],discharge:'Patient 8 asked when they could come back.',reward:35,rr:10},
+  {label:'Patient 9',condition:'Major Depressive Disorder',  steps:[{name:'Intake Assessment'},{name:'Group Therapy'}],discharge:'Patient 9 wrote Dr. Olcay a letter.',            reward:38,rr:11},
+];
+
+const RPROJ=[
+  {name:'Mood Stabilizer Efficacy',   rrw:15,running:false,done:false,collected:false,progress:0,dur:15},
+  {name:'Schizophrenia Onset Markers',rrw:20,running:false,done:false,collected:false,progress:0,dur:15},
+];
+const LPROJ=[{name:'Crisis Assessment',reward:25,running:false,done:false,progress:0}];
+
+// UNLOCK HINT TEXTS
+const UNLOCK_HINTS={
+  2:'Discharge 1 patient',
+  1:'Discharge 3 patients',
+  4:'Complete 1 research',
+  3:'Discharge 5 patients',
+  5:'Complete 2 research',
+};
+
+// GAME STATE
+const G={
+  started:false,points:0,research:0,
+  energy:15,maxEnergy:15,
+  restoring:false,restoreStart:0,
+  unlocked:{0:true,1:false,2:false,3:false,4:false,5:false},
+  patients:[null,null,null],
+  admitQueue:0,popupCb:null,
+  tasks:{},
+  actionCount:0,
+  discharges:0,
+  lecturesDone:0,
+  activeResearch:null,
+  activeLecture:null,
+  lockedInRoom:null,
+  animT:0,
+  outroShown:false,
+};
+
+function nextDur(){ G.actionCount++; return 5; }
+
+// PLAYER — spawns just below the reception desk, in the waiting area
+const PL={x:240,y:480,spd:110,dir:'down',frame:0,ft:0,moving:false};
+const CAM={x:0,y:0};
+
+// BUTTONS
+const BTN_ELS={};
+function makeBtns(){
+  const gw=document.getElementById('gw');
+  [...LAYOUT,{id:'desk'}].forEach(rm=>{
+    const b=document.createElement('button');
+    b.className='room-btn';b.onclick=()=>handleRoomAction(rm.id);
+    gw.appendChild(b);BTN_ELS[rm.id]=b;
+  });
+}
+
+// HELPERS
+function fr(wx,wy,ww,wh){cx.fillRect(Math.round(wx-CAM.x),Math.round(wy-CAM.y),ww,wh);}
+function circle(wx,wy,r,col){cx.fillStyle=col;cx.beginPath();cx.arc(wx-CAM.x,wy-CAM.y,r,0,Math.PI*2);cx.fill();}
+
+// DRAW MAP — static illustrated background, drawn once at world origin.
+// The camera (CAM.x/CAM.y) crops into it exactly like the old procedural
+// tiles did, so movement/scrolling code is untouched. Locked rooms still
+// get a dark overlay + hint text on top, in the same screen positions as
+// before. Furniture is baked into the art, so drawFurn/static desk drawing
+// are no longer called; dynamic overlays (patients, task timers, lab
+// animations) are drawn separately, after the background.
+function activeActionBgKey(){
+  // Stays on the action background from when the action starts until the
+  // player actually clicks "Collect Results"/"Collect Notes" — not just
+  // until the timer finishes (RPROJ/LPROJ track done-but-uncollected state).
+  if(G.activeResearch) return 'research';
+  if(RPROJ.some(r=>r.done&&!r.collected)) return 'research';
+  if(G.restoring) return 'break';
+  if(G.activeLecture) return 'lecture';
+  if(LPROJ[0].done) return 'lecture';
+  return null;
+}
+
+function drawMap(){
+  cx.fillStyle=BG;cx.fillRect(0,0,VW,VH);
+
+  const actionKey=activeActionBgKey();
+  if(actionKey && ACTION_BG_LOADED[actionKey]){
+    cx.drawImage(ACTION_BG_IMG[actionKey],-CAM.x,-CAM.y,BG_W,BG_H);
+  } else if(bgImgLoaded){
+    cx.drawImage(bgImg,-CAM.x,-CAM.y,BG_W,BG_H);
+  }
+
+  // Reception waiting-area overlay — shows 0-3 patients depending on queue.
+  // Always drawn, even during an action — the action art is a full-ward
+  // illustration that would otherwise cover the reception area too.
+  {
+    const waitingCount=Math.max(0,Math.min(3,PDEFS.length-G.admitQueue));
+    const img=RECEPTION_OVERLAYS[waitingCount];
+    if(img&&img.loaded){
+      cx.drawImage(img, -CAM.x, ROW_Y.bottom-240-CAM.y, BG_W, 240);
+    }
+  }
+
+
+  // Locked-room overlays — solid dark image per room. Always drawn except
+  // for whichever single room is currently showing its own action art.
+  LAYOUT.forEach(rm=>{
+    if(G.unlocked[rm.id]) return;
+    if(actionKey && rm.type===actionKey) return;
+    const{x0,cy,w,h}=rmZone(rm);
+    const img=LOCKED_OVERLAYS[rm.id];
+    if(img&&img.loaded){
+      cx.drawImage(img, x0-CAM.x, cy-CAM.y, w, h);
+    } else {
+      cx.fillStyle='rgba(10,16,24,.9)';
+      cx.fillRect(x0-CAM.x, cy-CAM.y, w, h);
+    }
+  });
+
+}
+
+// ── PERSON DRAWING HELPERS ──
+// PLAYER DRAW — illustrated sprite (image-based, replaces old pixel-art SPR)
+function drawRoomOverlays(){
+  LAYOUT.forEach(rm=>{
+    if(rm.type!=='bed') return;
+    if(!G.unlocked[rm.id]) return;
+    const pat=G.patients[rm.bi];
+    if(!pat) return;
+    const task=G.tasks[rm.id];
+    const hasTask=!!task;
+    const img=hasTask ? DOCTOR_OVERLAYS[rm.id] : ROOM_OVERLAYS[rm.id];
+    if(!img||!img.loaded) return;
+    const{x0,cy,h}=rmZone(rm);
+    const sx=x0-CAM.x, sy=cy-CAM.y;
+    cx.drawImage(img, sx, sy, 240, h);
+  });
+}
+
+function drawPlayer(){
+  const sx=Math.round(PL.x-CAM.x), sy=Math.round(PL.y-CAM.y);
+
+  // Soft grounding shadow under the feet, drawn regardless of image load state
+  cx.save();
+  cx.fillStyle='rgba(0,0,0,.28)';
+  cx.beginPath();
+  cx.ellipse(sx,sy+T*.06,T*.32,T*.11,0,0,Math.PI*2);
+  cx.fill();
+  cx.restore();
+
+  const frameSet=(PL.moving&&PL.frame===1)?PLAYER_SPRITES_WALK:PLAYER_SPRITES;
+  const img=frameSet[PL.dir]||frameSet.down;
+  if(!img||!img.loaded){
+    // fallback dot while the image is still loading
+    cx.fillStyle='#FFF';cx.beginPath();cx.arc(sx,sy,8,0,Math.PI*2);cx.fill();
+    return;
+  }
+
+  // Tiny idle bob so the character doesn't look static even with one frame
+  const bob=PL.moving?Math.sin(PL.ft*14)*1.5:Math.sin(G.animT*1.6)*1;
+
+  const aspectSet=(PL.moving&&PL.frame===1)?SPRITE_ASPECT_WALK:SPRITE_ASPECT;
+  const dh=SPRITE_H, dw=dh*(aspectSet[PL.dir]||aspectSet.down);
+  const dx=sx-dw/2, dy=sy-dh+T*.14+bob; // feet anchored just above shadow
+
+  cx.save();
+  if(PL.dir==='right'){
+    // mirror the left-facing art to derive a right-facing read
+    cx.translate(sx,0); cx.scale(-1,1); cx.translate(-sx,0);
+  }
+  cx.imageSmoothingEnabled=true;
+  cx.drawImage(img,dx,dy,dw,dh);
+  cx.restore();
+}
+
+// JOYSTICK
+const JOY={active:false,ox:0,oy:0,dx:0,dy:0,R:36};
+const jz=document.getElementById('jz'),jt=document.getElementById('jt');
+function applyJoy(rx,ry){const d=Math.hypot(rx,ry)||1;const dx=d>JOY.R?rx/d*JOY.R:rx,dy=d>JOY.R?ry/d*JOY.R:ry;JOY.dx=dx/JOY.R;JOY.dy=dy/JOY.R;jt.style.left=(36+dx)+'px';jt.style.top=(36+dy)+'px';}
+function resetJoy(){JOY.active=false;JOY.dx=0;JOY.dy=0;jt.style.left='36px';jt.style.top='36px';}
+jz.addEventListener('touchstart',e=>{e.preventDefault();JOY.active=true;const r=jz.getBoundingClientRect(),t=e.touches[0];JOY.ox=t.clientX-r.left-60;JOY.oy=t.clientY-r.top-60;},{passive:false});
+jz.addEventListener('touchmove',e=>{e.preventDefault();if(!JOY.active)return;const r=jz.getBoundingClientRect(),t=e.touches[0];applyJoy(t.clientX-r.left-60-JOY.ox,t.clientY-r.top-60-JOY.oy);},{passive:false});
+jz.addEventListener('touchend',resetJoy);
+jz.addEventListener('mousedown',e=>{JOY.active=true;const r=jz.getBoundingClientRect();JOY.ox=e.clientX-r.left-60;JOY.oy=e.clientY-r.top-60;});
+window.addEventListener('mousemove',e=>{if(!JOY.active)return;const r=jz.getBoundingClientRect();applyJoy(e.clientX-r.left-60-JOY.ox,e.clientY-r.top-60-JOY.oy);});
+window.addEventListener('mouseup',resetJoy);
+const KEYS={};
+window.addEventListener('keydown',e=>{KEYS[e.key]=true;});window.addEventListener('keyup',e=>{KEYS[e.key]=false;});
+
+// ZONE DETECTION — player never enters room boxes now, so "zone" means
+// "standing in the corridor at this room's row, with the room on the side
+// the player is currently facing/positioned toward" rather than literal overlap.
+function detectZone(){
+  const px=PL.x,py=PL.y;
+  const deskMinY=ROW_Y.notice,deskMaxY=ROW_Y.bottom;
+  if(px>=2*T&&px<9*T&&py>=deskMinY&&py<=deskMaxY)return'desk';
+  const inCorridor = px>=COL_X.corL && px<=COL_X.corR;
+  if(!inCorridor)return null;
+  for(const rm of LAYOUT){
+    const r=ROOM_ROWS[rm.row];
+    if(py<r.top||py>=r.bottom)continue;
+    // corridor midpoint decides which side's room is "active" for this row
+    const mid=(COL_X.corL+COL_X.corR)/2;
+    const onLeft = px<mid;
+    if((rm.side==='L'&&onLeft)||(rm.side==='R'&&!onLeft)){
+      if(!G.unlocked[rm.id])return {locked:rm.id};
+      return rm.id;
+    }
+  }
+  return null;
+}
+
+// BUTTONS
+function updateButtons(zone){
+  Object.values(BTN_ELS).forEach(b=>{b.classList.remove('on','warn');b.style.pointerEvents='';});
+  if(zone===null||typeof zone==='object')return; // null, or {locked:id} — no button for locked rooms
+  if(zone==='desk'){
+    const b=BTN_ELS['desk'];
+    if(G.admitQueue<PDEFS.length&&findBed()!==null){
+      b.textContent=`Admit ${PDEFS[G.admitQueue].label}`;
+      posBtn(b,'desk');b.classList.add('on');
+    }
+    return;
+  }
+  const rm=LAYOUT.find(r=>r.id===zone);
+  if(!rm||!G.unlocked[rm.id])return;
+  const b=BTN_ELS[rm.id];
+  const task=G.tasks[rm.id];
+
+  if(rm.type==='bed'){
+    const pat=G.patients[rm.bi];
+    if(!pat)return;
+    if(task){
+      const el=Math.min((Date.now()-task.start)/1000,task.dur);
+      const pct=Math.floor((el/task.dur)*10)*10;
+      const stepName=pat.state.startsWith('step-')?pat.def.steps[pat.cs].name:pat.def.steps[0].name;
+      b.textContent=`⏳ ${stepName} - ${pct}%`;
+      posBtn(b,rm);b.classList.add('on');b.style.pointerEvents='none';
+      return;
+    }
+    if(G.energy<=0){b.textContent='⚡ Need energy';posBtn(b,rm);b.classList.add('on','warn');return;}
+    if(pat.state==='admitted'){b.textContent=`▶ ${pat.def.steps[0].name}`;posBtn(b,rm);b.classList.add('on');}
+    else if(pat.state.startsWith('step-')){
+      const si=pat.cs;
+      if((pat.sp[si]||0)>=100){
+        const nx=si+1;
+        b.textContent=`▶ ${pat.def.steps[nx].name}`;
+        posBtn(b,rm);b.classList.add('on');
+      }
+    } else if(pat.state==='ready'){b.textContent='🌿 Discharge';posBtn(b,rm);b.classList.add('on');}
+  } else if(rm.type==='research'){
+    if(G.activeResearch){
+      const proj=RPROJ[G.activeResearch.projIdx];
+      b.textContent=`🔬 ${proj.name} - ${Math.floor((proj.progress||0)/10)*10}%`;
+      posBtn(b,rm);b.classList.add('on');b.style.pointerEvents='none';
+      return;
+    }
+    const done=RPROJ.find(r=>r.done&&!r.collected);
+    const idle=RPROJ.find(r=>!r.running&&!r.done&&!r.collected);
+    if(done){b.textContent='📊 Collect Results';posBtn(b,rm);b.classList.add('on');}
+    else if(idle&&G.energy>0){b.textContent=`🔬 ${idle.name} (${idle.dur}s)`;posBtn(b,rm);b.classList.add('on');}
+    else if(G.energy<=0){b.textContent='⚡ Need energy';posBtn(b,rm);b.classList.add('on','warn');}
+  } else if(rm.type==='break'){
+    if(G.restoring){
+      b.textContent='Restoring...';posBtn(b,rm);b.classList.add('on');b.style.pointerEvents='none';
+    } else if(G.energy<G.maxEnergy){
+      b.textContent='⚡ Rest & Restore (10s)';posBtn(b,rm);b.classList.add('on');
+    }
+  } else if(rm.type==='lecture'){
+    if(G.activeLecture){
+      const p=LPROJ[0];
+      b.textContent=`🎓 Lecturing... ${Math.floor((p.progress||0)/10)*10}%`;
+      posBtn(b,rm);b.classList.add('on');b.style.pointerEvents='none';
+      return;
+    }
+    const p=LPROJ[0];
+    if(p.done){b.textContent='📚 Collect Notes';posBtn(b,rm);b.classList.add('on');}
+    else if(!p.running&&G.energy>0){b.textContent='🎓 Give Lecture (15s)';posBtn(b,rm);b.classList.add('on');}
+    else if(G.energy<=0){b.textContent='⚡ Need energy';posBtn(b,rm);b.classList.add('on','warn');}
+  }
+}
+
+function posBtn(b,rm){
+  if(rm==='desk'){
+    const dx=(COL_X.corL+COL_X.corR)/2-CAM.x;
+    const dy=DESK_Y-CAM.y+150;
+    b.style.left=Math.round(dx)+'px';b.style.top=Math.round(dy)+'px';return;
+  }
+  const{x0,w,cb}=rmZone(rm);
+  const centreX=x0-CAM.x+w/2;           // horizontal centre of room
+  const bottomY=cb-CAM.y-6+60;          // 6px above room bottom, pushed down 60px
+  b.style.left=Math.round(centreX)+'px';
+  b.style.top=Math.round(bottomY)+'px';
+}
+
+// ROOM ACTION
+function handleRoomAction(id){
+  if(id==='desk'){
+    if(G.admitQueue>=PDEFS.length)return;
+    const bed=findBed();if(bed===null){toast('No empty beds.');return;}
+    const def=PDEFS[G.admitQueue];
+    const skins=['#F5DECE','#D4956A','#C68642','#8D5524','#F5DECE','#D4956A','#C68642','#8D5524','#F5DECE','#D4956A'];
+    const hairs=['#111','#3D2B1F','#8B4513','#2C1810','#555','#111','#3D2B1F','#8B4513','#2C1810','#555'];
+    const pat={def,label:def.label,state:'admitted',cs:-1,
+      sp:def.steps.map(()=>0),st:def.steps.map(()=>null),
+      skinTone:skins[G.admitQueue%skins.length],
+      hairCol:hairs[G.admitQueue%hairs.length]};
+    G.patients[bed]=pat;
+    G.admitQueue++;
+    queueWaiting();
+    checkUnlocks();
+    toast(`${def.label} admitted.`);
+    return;
+  }
+  const rm=LAYOUT.find(r=>r.id===id);if(!rm)return;
+  if(rm.type==='bed'){
+    if(G.energy<=0){toast('⚡ No energy.',true);return;}
+    if(G.tasks[rm.id])return;
+    const pat=G.patients[rm.bi];if(!pat)return;
+    if(pat.state==='admitted'){
+      const dur=nextDur();G.energy=Math.max(0,G.energy-1);updateEnergyBar();
+      pat.state='step-0';pat.cs=0;pat.st[0]=Date.now();
+      G.tasks[rm.id]={start:Date.now(),dur,cb:()=>{pat.sp[0]=100;toast(`${pat.def.steps[0].name} complete.`);}};
+      toast(`${pat.def.steps[0].name} — ${dur}s`);
+    } else if(pat.state.startsWith('step-')){
+      const si=pat.cs;if((pat.sp[si]||0)<100)return;
+      const nx=si+1;
+      if(nx<pat.def.steps.length){
+        const dur=nextDur();G.energy=Math.max(0,G.energy-1);updateEnergyBar();
+        pat.cs=nx;pat.state=`step-${nx}`;pat.st[nx]=Date.now();
+        G.tasks[rm.id]={start:Date.now(),dur,cb:()=>{
+          pat.sp[nx]=100;
+          if(nx>=pat.def.steps.length-1){pat.state='ready';toast(`${pat.label} ready for discharge.`);}
+          else toast(`${pat.def.steps[nx].name} complete.`);
+        }};
+        toast(`${pat.def.steps[nx].name} — ${dur}s`);
+      }
+    } else if(pat.state==='ready'){
+      const def=pat.def;
+      showPopup('🌿',`${pat.label} — Discharged`,def.discharge,
+        null,
+        ()=>{G.points+=def.reward;G.research+=def.rr;G.patients[rm.bi]=null;G.discharges++;checkUnlocks();});
+    }
+  } else if(rm.type==='research'){
+    if(G.activeResearch||G.activeLecture)return;
+    const done=RPROJ.find(r=>r.done&&!r.collected);
+    const idle=RPROJ.find(r=>!r.running&&!r.done&&!r.collected);
+    if(done){G.research+=done.rrw;done.collected=true;done.done=false;toast(`📊 +${done.rrw} data`);checkUnlocks();return;}
+    if(idle&&G.energy>0){
+      G.energy=Math.max(0,G.energy-1);updateEnergyBar();
+      G.activeResearch={projIdx:RPROJ.indexOf(idle),start:Date.now(),dur:idle.dur};
+      G.lockedInRoom=rm.id;idle.running=true;
+      toast(`🔬 ${idle.name} (${idle.dur}s)`);
+    }
+  } else if(rm.type==='break'){
+    if(G.energy>=G.maxEnergy){toast('Energy is full.');return;}
+    if(G.restoring)return;
+    G.restoring=true;G.restoreStart=Date.now();toast('Resting...');
+  } else if(rm.type==='lecture'){
+    if(G.activeResearch||G.activeLecture)return;
+    const p=LPROJ[0];
+    if(p.done){G.points+=p.reward;G.lecturesDone++;p.done=false;p.running=false;p.progress=0;toast(`📚 +${p.reward} pts`);checkUnlocks();return;}
+    if(!p.running&&G.energy>0){
+      G.energy=Math.max(0,G.energy-1);updateEnergyBar();
+      G.activeLecture={start:Date.now(),dur:15};G.lockedInRoom=rm.id;p.running=true;
+      toast('📖 Lecture in progress (15s)');
+    }
+  }
+}
+
+// UNLOCKS
+function queueWaiting(){
+  // Keep up to 9 waiting patients queued (3 cols × 3 rows)
+}
+function findBed(){
+  for(let i=0;i<3;i++){
+    const rm=LAYOUT.find(r=>r.type==='bed'&&r.bi===i);
+    if(rm&&G.unlocked[rm.id]&&!G.patients[i])return i;
+  }
+  return null;
+}
+function checkUnlocks(){
+  const d=G.discharges,rc=RPROJ.filter(r=>r.collected).length;
+  if(d>=1&&!G.unlocked[2]){G.unlocked[2]=true;showPopup('🏥','Room 2 Unlocked','A second bed is now available.',null,null);}
+  if(d>=3&&!G.unlocked[1]){G.unlocked[1]=true;showPopup('🔬','Research Lab Unlocked','You\'ve treated 3 patients. Time to research.',null,null);}
+  if(rc>=1&&!G.unlocked[4]){G.unlocked[4]=true;showPopup('🏥','Room 3 Unlocked','First research complete. The ward grows.',null,null);}
+  if(d>=5&&!G.unlocked[3]){G.unlocked[3]=true;showPopup('☕','Break Room Unlocked','5 patients treated. You\'ve earned a rest.',null,null);}
+  if(rc>=2&&!G.unlocked[5]){G.unlocked[5]=true;showPopup('📚','Lecture Hall Unlocked','Both research projects done. Time to teach.',null,null);}
+  // Outro: 9 discharges (all patients) + 2 research + 1 lecture
+  if(d>=9&&rc>=2&&G.lecturesDone>=1&&!G.outroShown){
+    G.outroShown=true;
+    setTimeout(()=>{
+      const o=document.getElementById('outro');
+      o.style.display='flex';
+      o.style.opacity='0';o.style.transition='opacity 1.5s';
+      requestAnimationFrame(()=>{requestAnimationFrame(()=>{o.style.opacity='1';});});
+    },1500);
+  }
+}
+
+// ENERGY
+function updateEnergyBar(){
+  const pct=G.energy/G.maxEnergy*100;
+  const f=document.getElementById('ebar-fill');
+  f.style.width=pct+'%';
+  f.style.background=pct>50?'#A8C5A0':pct>20?'#E8C87A':'#C4735A';
+}
+
+// POPUP & TOAST
+function showPopup(icon,title,text,reward,cb){
+  document.getElementById('pi').textContent=icon;
+  document.getElementById('ptitle').textContent=title;
+  document.getElementById('ptext').textContent=text;
+  const r=document.getElementById('preward');
+  if(reward){r.textContent=reward;r.style.display='block';}else r.style.display='none';
+  G.popupCb=cb;document.getElementById('popup').classList.add('show');
+}
+function closePopup(){
+  document.getElementById('popup').classList.remove('show');
+  if(G.popupCb){G.popupCb();G.popupCb=null;}
+}
+let tTO;
+function toast(msg,warn=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className=warn?'show warn':'show';
+  clearTimeout(tTO);tTO=setTimeout(()=>{t.className='';},3200);
+}
+
+// GAME LOOP
+let lt=0;
+function loop(ts){
+  const dt=Math.min((ts-lt)/1000,.1);lt=ts;
+  if(G.started){update(dt);render();}
+  requestAnimationFrame(loop);
+}
+
+function update(dt){
+  G.animT+=dt;
+  let dx=JOY.dx,dy=JOY.dy;
+  if(KEYS['ArrowLeft']||KEYS['a'])dx-=1;if(KEYS['ArrowRight']||KEYS['d'])dx+=1;
+  if(KEYS['ArrowUp']||KEYS['w'])dy-=1;if(KEYS['ArrowDown']||KEYS['s'])dy+=1;
+  const len=Math.hypot(dx,dy);if(len>1){dx/=len;dy/=len;}
+
+  const locked=!!(activeActionBgKey()||G.restoring);
+  PL.moving=len>.1&&!locked;
+  if(PL.moving){
+    const nx=PL.x+dx*PL.spd*dt, ny=PL.y+dy*PL.spd*dt;
+    if(Math.abs(dx)>Math.abs(dy))PL.dir=dx>0?'right':'left';else PL.dir=dy>0?'down':'up';
+    PL.ft+=dt;if(PL.ft>.2){PL.frame=(PL.frame+1)%2;PL.ft=0;}
+    const cx2=nx;
+    const cy2=Math.max(100,Math.min(550,ny));
+    // Walkable space = the vertical corridor strip (full room-row height) +
+    // everything at/below the notice band (transition strip + reception).
+    // Anything else is inside a room box and is blocked regardless of lock state.
+    {
+      const inCorridor = cx2>=COL_X.corL && cx2<=COL_X.corR;
+      if(inCorridor){PL.x=cx2;PL.y=cy2;}
+      else{
+        if(COL_X.corL<=PL.x&&PL.x<=COL_X.corR)PL.y=cy2;
+        if(cx2>=COL_X.corL&&cx2<=COL_X.corR)PL.x=cx2;
+      }
+    }
+  } else PL.frame=0;
+
+  CAM.x=Math.max(0,Math.min(BG_W-VW,PL.x-VW/2));
+  CAM.y=Math.max(0,Math.min(BG_H-VH,PL.y-VH/2));
+
+  const now=Date.now();
+
+  // Room tasks
+  Object.keys(G.tasks).forEach(id=>{
+    const task=G.tasks[id];
+    if((now-task.start)/1000>=task.dur){
+      const cb=task.cb;delete G.tasks[id];
+      try{if(cb)cb();}catch(e){console.error(e);}
+    }
+  });
+
+  // Active research
+  if(G.activeResearch){
+    const ar=G.activeResearch,el=(now-ar.start)/1000;
+    const proj=RPROJ[ar.projIdx];
+    proj.progress=Math.min(100,el/ar.dur*100);
+    if(el>=ar.dur){proj.running=false;proj.done=true;proj.progress=100;G.activeResearch=null;G.lockedInRoom=null;toast(`🔬 ${proj.name} complete! Collect results.`);}
+  }
+
+  // Active lecture
+  if(G.activeLecture){
+    const al=G.activeLecture,el=(now-al.start)/1000;
+    LPROJ[0].progress=Math.min(100,el/al.dur*100);
+    if(el>=al.dur){LPROJ[0].running=false;LPROJ[0].done=true;G.activeLecture=null;G.lockedInRoom=null;toast('📚 Lecture complete! Collect your notes.');}
+  }
+
+  // Energy restore — 10s
+  if(G.restoring&&(now-G.restoreStart)/1000>=10){
+    G.restoring=false;G.energy=G.maxEnergy;updateEnergyBar();toast('⚡ Energy fully restored!');
+  }
+
+  updateButtons(detectZone());
+  document.getElementById('hpat').textContent=G.discharges;
+  document.getElementById('hresc').textContent=RPROJ.filter(r=>r.collected).length;
+  document.getElementById('hlec').textContent=G.lecturesDone;
+}
+
+function render(){
+  cx.clearRect(0,0,VW,VH);
+  drawMap();
+  drawRoomOverlays();
+  if(!activeActionBgKey()&&!LAYOUT.some(rm=>rm.type==='bed'&&G.tasks[rm.id])) drawPlayer();
+}
+
+function startGame(){
+  document.getElementById('intro').classList.add('hidden');
+  setTimeout(()=>{document.getElementById('intro').style.display='none';},700);
+  G.started=true;updateEnergyBar();
+  queueWaiting();
+  toast('Welcome, Dr. Olcay. Head to Reception to admit your first patient.');
+}
+
+makeBtns();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
